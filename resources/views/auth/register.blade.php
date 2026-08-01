@@ -28,14 +28,14 @@
                 <label class="form-label">Cédula</label>
                 <div class="input-group">
                     <span class="input-group-text"><i class="bi bi-credit-card-2-front"></i></span>
-                    <input type="text" name="cedula" class="form-control" value="{{ old('cedula') }}" required maxlength="15" placeholder="0700000000">
+                    <input type="text" name="cedula" class="form-control" value="{{ old('cedula') }}" required maxlength="10" inputmode="numeric" pattern="[0-9]{10}" title="Debe tener exactamente 10 dígitos" placeholder="0700000000">
                 </div>
             </div>
             <div class="col-md-6 mb-3">
                 <label class="form-label">Teléfono</label>
                 <div class="input-group">
                     <span class="input-group-text"><i class="bi bi-telephone"></i></span>
-                    <input type="text" name="telefono" class="form-control" value="{{ old('telefono') }}" required maxlength="20" placeholder="0990000000">
+                    <input type="text" name="telefono" class="form-control" value="{{ old('telefono') }}" required maxlength="10" inputmode="numeric" pattern="[0-9]{10}" title="Debe tener exactamente 10 dígitos" placeholder="0990000000">
                 </div>
             </div>
         </div>
@@ -45,7 +45,7 @@
                 <label class="form-label">Fecha de nacimiento</label>
                 <div class="input-group">
                     <span class="input-group-text"><i class="bi bi-calendar3"></i></span>
-                    <input type="date" name="fecha_nacimiento" class="form-control" value="{{ old('fecha_nacimiento') }}" required>
+                    <input type="date" name="fecha_nacimiento" class="form-control" value="{{ old('fecha_nacimiento') }}" max="{{ now()->subDay()->format('Y-m-d') }}" required>
                 </div>
             </div>
             <div class="col-md-6 mb-3">

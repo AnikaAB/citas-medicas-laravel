@@ -43,35 +43,35 @@
 @else
     <div class="row g-3">
         <div class="col-md-3 col-sm-6">
-            <div class="stat-card" style="background: linear-gradient(135deg, #4f7cff, #7b3fe4);">
+            <div class="stat-card" style="background: linear-gradient(135deg, #22d3ee, #7b3fe4); box-shadow: 0 12px 30px rgba(34,211,238,0.35);">
                 <div class="stat-icon"><i class="bi bi-clipboard2-pulse"></i></div>
                 <h2>{{ $totalDoctores }}</h2>
                 <p>Doctores</p>
             </div>
         </div>
         <div class="col-md-3 col-sm-6">
-            <div class="stat-card" style="background: linear-gradient(135deg, #14b8a6, #0d9488);">
+            <div class="stat-card" style="background: linear-gradient(135deg, #34ead1, #0d9488); box-shadow: 0 12px 30px rgba(52,234,209,0.3);">
                 <div class="stat-icon"><i class="bi bi-people"></i></div>
                 <h2>{{ $totalPacientes }}</h2>
                 <p>Pacientes</p>
             </div>
         </div>
         <div class="col-md-3 col-sm-6">
-            <div class="stat-card" style="background: linear-gradient(135deg, #f59e0b, #d97706);">
+            <div class="stat-card" style="background: linear-gradient(135deg, #fbbf24, #f97316); box-shadow: 0 12px 30px rgba(251,191,36,0.3);">
                 <div class="stat-icon"><i class="bi bi-calendar2-week"></i></div>
                 <h2>{{ $totalCitas }}</h2>
                 <p>Citas totales</p>
             </div>
         </div>
         <div class="col-md-3 col-sm-6">
-            <div class="stat-card" style="background: linear-gradient(135deg, #ec4899, #db2777);">
+            <div class="stat-card" style="background: linear-gradient(135deg, #f472b6, #a21caf); box-shadow: 0 12px 30px rgba(244,114,182,0.3);">
                 <div class="stat-icon"><i class="bi bi-calendar2-check"></i></div>
                 <h2>{{ $citasHoy }}</h2>
                 <p>Citas hoy</p>
             </div>
         </div>
     </div>
-    <div class="mt-4 p-3" style="background: #FEF3C7; border-radius: 12px; color: #92400E;">
+    <div class="mt-4 p-3" style="background: rgba(251,191,36,0.12); border: 1px solid rgba(251,191,36,0.35); border-radius: 12px; color: #fcd34d;">
         <i class="bi bi-hourglass-split me-2"></i>
         Citas pendientes por confirmar: <strong>{{ $citasPendientes }}</strong>
     </div>

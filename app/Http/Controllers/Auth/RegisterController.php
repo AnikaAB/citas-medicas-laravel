@@ -23,12 +23,17 @@ class RegisterController extends Controller
         $datos = $request->validate([
             'nombre' => ['required', 'string', 'max:100'],
             'apellido' => ['required', 'string', 'max:100'],
-            'cedula' => ['required', 'string', 'max:15', 'unique:pacientes,cedula'],
-            'telefono' => ['required', 'string', 'max:20'],
-            'fecha_nacimiento' => ['required', 'date', 'before:today'],
+            'cedula' => ['required', 'digits:10', 'unique:pacientes,cedula'],
+            'telefono' => ['required', 'digits:10'],
+            'fecha_nacimiento' => ['required', 'date', 'before:today', 'after:1900-01-01'],
             'direccion' => ['nullable', 'string', 'max:255'],
             'email' => ['required', 'email', 'max:255', 'unique:users,email', 'unique:pacientes,email'],
             'password' => ['required', 'confirmed', Password::min(8)],
+        ], [
+            'cedula.digits' => 'La cédula debe tener exactamente 10 dígitos.',
+            'telefono.digits' => 'El teléfono debe tener exactamente 10 dígitos.',
+            'fecha_nacimiento.before' => 'La fecha de nacimiento no puede ser hoy ni una fecha futura.',
+            'fecha_nacimiento.after' => 'Ingresa una fecha de nacimiento válida.',
         ]);
 
         $usuario = DB::transaction(function () use ($datos) {
