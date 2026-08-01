@@ -16,6 +16,17 @@ class Cita extends Model
     public const ESTADO_CANCELADA = 'cancelada';
     public const ESTADO_ATENDIDA = 'atendida';
 
+    /**
+     * Mapa de transiciones de estado permitidas.
+     * Clave = estado actual, valor = estados a los que puede pasar.
+     */
+    public const TRANSICIONES = [
+        self::ESTADO_PENDIENTE => [self::ESTADO_CONFIRMADA, self::ESTADO_CANCELADA],
+        self::ESTADO_CONFIRMADA => [self::ESTADO_ATENDIDA, self::ESTADO_CANCELADA],
+        self::ESTADO_ATENDIDA => [],
+        self::ESTADO_CANCELADA => [],
+    ];
+
     protected $fillable = [
         'paciente_id',
         'doctor_id',
@@ -30,7 +41,11 @@ class Cita extends Model
     protected function casts(): array
     {
         return [
-            'fecha' => 'date',
+            // Formato explicito Y-m-d (sin hora): evita que Eloquent serialice
+            // "fecha" con un timestamp completo (00:00:00) al guardar, lo cual
+            // rompia comparaciones exactas de string en SQLite (usado en tests)
+            // y en assertDatabaseHas.
+            'fecha' => 'date:Y-m-d',
         ];
     }
 
@@ -50,57 +65,24 @@ class Cita extends Model
     }
 
     /**
-     * Combina fecha + hora en un solo Carbon, para poder comparar
-     * contra "ahora" (util para la regla de las 24 horas y para
-     * saber si una cita ya paso).
+     * Indica si es valido pasar del estado $actual al estado $nuevo
+     * segun el mapa de transiciones definido en TRANSICIONES.
      */
-    public function fechaHora(): \Illuminate\Support\Carbon
+    public static function transicionValida(string $actual, string $nuevo): bool
     {
-        return \Illuminate\Support\Carbon::parse(
-            $this->fecha->format('Y-m-d') . ' ' . $this->hora
-        );
+        // Permite "transicionar" al mismo estado (no-op) sin romper flujos existentes.
+        if ($actual === $nuevo) {
+            return true;
+        }
+
+        return in_array($nuevo, self::TRANSICIONES[$actual] ?? [], true);
     }
 
     /**
-     * Una cita ya "paso" si su fecha/hora es anterior al momento actual.
+     * Indica si la cita ya llego a un estado final (no permite mas cambios).
      */
-    public function yaPaso(): bool
+    public function estaFinalizada(): bool
     {
-        return $this->fechaHora()->isPast();
-    }
-
-    /**
-     * Regla de negocio pedida por el paciente: solo se puede cancelar
-     * o reprogramar una cita si:
-     *  - todavia no fue atendida ni esta ya cancelada, Y
-     *  - faltan mas de 24 horas para la hora de la cita.
-     */
-    public function puedeModificarse(): bool
-    {
-        if (in_array($this->estado, [self::ESTADO_ATENDIDA, self::ESTADO_CANCELADA], true)) {
-            return false;
-        }
-
-        return now()->diffInHours($this->fechaHora(), false) >= 24;
-    }
-
-    /**
-     * Mensaje explicando por que no se puede modificar (usado en las vistas).
-     */
-    public function motivoNoModificable(): ?string
-    {
-        if ($this->estado === self::ESTADO_ATENDIDA) {
-            return 'Esta cita ya fue atendida.';
-        }
-
-        if ($this->estado === self::ESTADO_CANCELADA) {
-            return 'Esta cita ya esta cancelada.';
-        }
-
-        if (now()->diffInHours($this->fechaHora(), false) < 24) {
-            return 'Solo se puede cancelar o reprogramar con al menos 24 horas de anticipacion.';
-        }
-
-        return null;
+        return $this->estado === self::ESTADO_ATENDIDA;
     }
 }

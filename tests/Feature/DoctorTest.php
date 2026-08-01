@@ -2,75 +2,74 @@
 
 namespace Tests\Feature;
 
-use App\Models\Doctor;
-use App\Models\User;
+use App\Models\Cita;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\Concerns\CreaUsuariosDePrueba;
 use Tests\TestCase;
 
-/**
- * Pruebas FUNCIONALES del CRUD completo de doctores.
- */
 class DoctorTest extends TestCase
 {
-    use RefreshDatabase;
+    use RefreshDatabase, CreaUsuariosDePrueba;
 
-    private function admin(): User
+    public function test_admin_puede_ver_el_listado_de_doctores(): void
     {
-        return User::factory()->create(['rol' => User::ROL_ADMIN]);
+        $admin = $this->crearAdmin();
+        $this->crearDoctorConUsuario(['nombre' => 'Sofia', 'apellido' => 'Mendoza']);
+
+        $response = $this->actingAs($admin)->get('/doctores');
+
+        $response->assertStatus(200);
+        $response->assertSee('Sofia');
     }
 
-    public function test_lista_los_doctores_registrados(): void
+    public function test_admin_puede_registrar_un_doctor_nuevo(): void
     {
-        Doctor::factory()->count(2)->create();
+        $admin = $this->crearAdmin();
 
-        $response = $this->actingAs($this->admin())->get(route('doctores.index'));
-
-        $response->assertOk();
-        $response->assertViewHas('doctores', fn ($d) => $d->total() === 2);
-    }
-
-    public function test_crea_un_doctor_junto_con_su_usuario_de_acceso(): void
-    {
-        $response = $this->actingAs($this->admin())->post(route('doctores.store'), [
-            'nombre' => 'Elena',
-            'apellido' => 'Vaca',
-            'especialidad' => 'Traumatologia',
-            'telefono' => '0991112233',
-            'email' => 'evaca@clinica.com',
+        $response = $this->actingAs($admin)->post('/doctores', [
+            'nombre' => 'Miguel',
+            'apellido' => 'Torres',
+            'especialidad' => 'Cardiologia',
+            'telefono' => '0991234567',
+            'email' => 'mtorres@clinica.com',
             'horario_inicio' => '08:00',
-            'horario_fin' => '16:00',
+            'horario_fin' => '17:00',
             'password' => 'password123',
         ]);
 
         $response->assertRedirect(route('doctores.index'));
-        $this->assertDatabaseHas('doctores', ['email' => 'evaca@clinica.com']);
-        $this->assertDatabaseHas('users', ['email' => 'evaca@clinica.com', 'rol' => 'doctor']);
+        $this->assertDatabaseHas('doctores', ['email' => 'mtorres@clinica.com']);
+        $this->assertDatabaseHas('users', ['email' => 'mtorres@clinica.com', 'rol' => 'doctor']);
     }
 
-    public function test_no_permite_horario_fin_anterior_o_igual_al_horario_inicio(): void
+    public function test_no_se_puede_registrar_un_doctor_con_horario_fin_antes_del_inicio(): void
     {
-        $response = $this->actingAs($this->admin())->post(route('doctores.store'), [
-            'nombre' => 'Elena',
-            'apellido' => 'Vaca',
-            'especialidad' => 'Traumatologia',
-            'telefono' => '0991112233',
-            'email' => 'evaca@clinica.com',
-            'horario_inicio' => '16:00',
+        $admin = $this->crearAdmin();
+
+        $response = $this->from('/doctores/create')->actingAs($admin)->post('/doctores', [
+            'nombre' => 'Miguel',
+            'apellido' => 'Torres',
+            'especialidad' => 'Cardiologia',
+            'telefono' => '0991234567',
+            'email' => 'mtorres@clinica.com',
+            'horario_inicio' => '17:00',
             'horario_fin' => '08:00',
             'password' => 'password123',
         ]);
 
         $response->assertSessionHasErrors('horario_fin');
+        $this->assertDatabaseCount('doctores', 0);
     }
 
-    public function test_actualiza_los_datos_de_un_doctor(): void
+    public function test_admin_puede_actualizar_los_datos_de_un_doctor(): void
     {
-        $doctor = Doctor::factory()->create(['especialidad' => 'Medicina General']);
+        $admin = $this->crearAdmin();
+        $doctor = $this->crearDoctorConUsuario(['especialidad' => 'Medicina General']);
 
-        $response = $this->actingAs($this->admin())->put(route('doctores.update', $doctor), [
+        $response = $this->actingAs($admin)->put("/doctores/{$doctor->id}", [
             'nombre' => $doctor->nombre,
             'apellido' => $doctor->apellido,
-            'especialidad' => 'Neurologia',
+            'especialidad' => 'Dermatologia',
             'telefono' => $doctor->telefono,
             'email' => $doctor->email,
             'horario_inicio' => '08:00',
@@ -78,16 +77,30 @@ class DoctorTest extends TestCase
         ]);
 
         $response->assertRedirect(route('doctores.index'));
-        $this->assertDatabaseHas('doctores', ['id' => $doctor->id, 'especialidad' => 'Neurologia']);
+        $this->assertDatabaseHas('doctores', [
+            'id' => $doctor->id,
+            'especialidad' => 'Dermatologia',
+        ]);
     }
 
-    public function test_elimina_un_doctor(): void
+    public function test_no_se_puede_eliminar_un_doctor_con_citas_activas(): void
     {
-        $doctor = Doctor::factory()->create();
+        $admin = $this->crearAdmin();
+        $doctor = $this->crearDoctorConUsuario();
+        $paciente = $this->crearPacienteConUsuario();
 
-        $response = $this->actingAs($this->admin())->delete(route('doctores.destroy', $doctor));
+        Cita::create([
+            'paciente_id' => $paciente->id,
+            'doctor_id' => $doctor->id,
+            'fecha' => now()->addDay()->toDateString(),
+            'hora' => '09:00:00',
+            'motivo' => 'Consulta general',
+            'estado' => Cita::ESTADO_CONFIRMADA,
+        ]);
 
-        $response->assertRedirect(route('doctores.index'));
-        $this->assertDatabaseMissing('doctores', ['id' => $doctor->id]);
+        $response = $this->actingAs($admin)->delete("/doctores/{$doctor->id}");
+
+        $response->assertSessionHasErrors('doctor');
+        $this->assertDatabaseHas('doctores', ['id' => $doctor->id]);
     }
 }

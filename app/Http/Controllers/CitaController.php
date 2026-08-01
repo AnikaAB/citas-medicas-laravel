@@ -17,6 +17,15 @@ class CitaController extends Controller
     {
         $query = Cita::with(['paciente', 'doctor']);
 
+        $usuario = $request->user();
+
+        // Un doctor solo puede ver su propia agenda.
+        if ($usuario->esDoctor()) {
+            // Si el usuario tiene rol doctor pero no tiene perfil vinculado
+            // (p. ej. su registro en `doctores` fue eliminado), no debe ver nada.
+            $query->where('doctor_id', $usuario->doctor->id ?? 0);
+        }
+
         if ($request->filled('estado')) {
             $query->where('estado', $request->input('estado'));
         }
@@ -43,14 +52,10 @@ class CitaController extends Controller
 
     /**
      * CREATE - Guardar nueva cita.
-     * Reglas de negocio clave:
-     *  - Un doctor no puede tener dos citas en la misma fecha y hora
-     *    (validado con 'unique' compuesto y reforzado a nivel de base
-     *    de datos con indice unico).
-     *  - No se puede agendar una cita en una fecha/hora que ya paso.
-     *    'after_or_equal:today' solo compara la FECHA, por eso si se
-     *    elige el dia de hoy hay que revisar tambien que la HORA no
-     *    haya pasado ya (mismo criterio que MisCitasController).
+     * Regla de negocio clave: un doctor no puede tener dos citas
+     * activas (no canceladas) en la misma fecha y hora. La validacion
+     * vive solo aqui en la app; no hay indice unico en BD para no
+     * bloquear un horario que quedo libre por cancelacion.
      */
     public function store(Request $request)
     {
@@ -64,21 +69,17 @@ class CitaController extends Controller
             'observaciones' => ['nullable', 'string'],
         ]);
 
-        if ($this->esFechaHoraPasada($datos['fecha'], $datos['hora'])) {
-            return back()->withErrors([
-                'hora' => 'No puedes agendar una cita en una hora que ya paso. Elige una hora futura.',
-            ])->withInput();
-        }
+        // El formulario envia la hora como "H:i" (ej. "10:00"), pero se
+        // normaliza siempre a "H:i:s" antes de comparar/guardar. Sin esto,
+        // "10:00" y "10:00:00" se tratan como valores distintos al comparar
+        // strings (pasa en SQLite, usado en los tests), lo que dejaba pasar
+        // citas duplicadas para el mismo doctor/fecha/hora.
+        $datos['hora'] = \Illuminate\Support\Carbon::parse($datos['hora'])->format('H:i:s');
 
-        // IMPORTANTE: 'fecha' se guarda en la BD con marca de tiempo completa
-        // (cast 'date' de Eloquent -> "2026-07-27 00:00:00"), pero aqui solo
-        // tenemos el string crudo del formulario ("2026-07-27"). Comparar con
-        // where('fecha', ...) nunca hace match y deja pasar duplicados que
-        // luego truenan contra el indice unico de la base de datos. whereDate()
-        // compara solo la parte de fecha sin importar el formato almacenado.
         $existe = Cita::where('doctor_id', $datos['doctor_id'])
-            ->whereDate('fecha', $datos['fecha'])
+            ->where('fecha', $datos['fecha'])
             ->where('hora', $datos['hora'])
+            ->where('estado', '!=', 'cancelada')
             ->exists();
 
         if ($existe) {
@@ -97,8 +98,14 @@ class CitaController extends Controller
     /**
      * READ - Detalle de una cita.
      */
-    public function show(Cita $cita)
+    public function show(Request $request, Cita $cita)
     {
+        $usuario = $request->user();
+
+        if ($usuario->esDoctor() && $cita->doctor_id !== ($usuario->doctor->id ?? 0)) {
+            abort(403, 'No tienes permisos para ver esta cita.');
+        }
+
         $cita->load(['paciente', 'doctor', 'creadoPor']);
 
         return view('citas.show', compact('cita'));
@@ -109,6 +116,12 @@ class CitaController extends Controller
      */
     public function edit(Cita $cita)
     {
+        if ($cita->estaFinalizada()) {
+            return redirect()->route('citas.index')->withErrors([
+                'estado' => 'No se puede modificar una cita ya atendida.',
+            ]);
+        }
+
         $pacientes = Paciente::orderBy('nombre')->get();
         $doctores = Doctor::orderBy('nombre')->get();
 
@@ -117,35 +130,58 @@ class CitaController extends Controller
 
     /**
      * UPDATE - Persistir cambios.
-     *
-     * Nota: a diferencia de store(), aqui NO se bloquea fecha/hora pasada
-     * a proposito, ya que el admin/recepcion suele editar una cita despues
-     * de que ocurrio (por ejemplo, para marcarla como "atendida" o agregar
-     * observaciones). Si tambien quieres bloquear esto al editar, avisame.
      */
     public function update(Request $request, Cita $cita)
     {
+        if ($cita->estaFinalizada()) {
+            return redirect()->route('citas.index')->withErrors([
+                'estado' => 'No se puede modificar una cita ya atendida.',
+            ]);
+        }
+
+        $esAdmin = Auth::user()->esAdmin();
+
         $datos = $request->validate([
             'paciente_id' => ['required', 'exists:pacientes,id'],
             'doctor_id' => ['required', 'exists:doctores,id'],
             'fecha' => ['required', 'date'],
             'hora' => ['required', 'date_format:H:i'],
             'motivo' => ['required', 'string', 'max:255'],
-            'estado' => ['required', 'in:pendiente,confirmada,cancelada,atendida'],
+            // Para admin, "estado" es irrelevante: se acepta cualquier cosa (o nada)
+            // en la validacion porque de todas formas se descarta mas abajo.
+            'estado' => $esAdmin
+                ? ['sometimes', 'in:pendiente,confirmada,cancelada,atendida']
+                : ['required', 'in:pendiente,confirmada,cancelada,atendida'],
             'observaciones' => ['nullable', 'string'],
         ]);
 
-        // Mismo fix que en store(): comparar por whereDate(), no por igualdad
-        // de string, porque 'fecha' se guarda con marca de tiempo completa.
+        // Misma normalizacion que en store(): la hora siempre se compara y
+        // guarda en formato "H:i:s".
+        $datos['hora'] = \Illuminate\Support\Carbon::parse($datos['hora'])->format('H:i:s');
+
         $existe = Cita::where('doctor_id', $datos['doctor_id'])
-            ->whereDate('fecha', $datos['fecha'])
+            ->where('fecha', $datos['fecha'])
             ->where('hora', $datos['hora'])
+            ->where('estado', '!=', 'cancelada')
             ->where('id', '!=', $cita->id)
             ->exists();
 
         if ($existe) {
             return back()->withErrors([
                 'hora' => 'El doctor seleccionado ya tiene una cita agendada en esa fecha y hora.',
+            ])->withInput();
+        }
+
+        if ($esAdmin) {
+            // El admin no gestiona el flujo clinico de la cita: se ignora
+            // cualquier valor de "estado" que venga en el formulario, aunque
+            // se manipule manualmente (curl, devtools, etc.).
+            unset($datos['estado']);
+        } elseif (isset($datos['estado']) && ! Cita::transicionValida($cita->estado, $datos['estado'])) {
+            // Maquina de estados: solo se permiten las transiciones definidas
+            // en Cita::TRANSICIONES (p. ej. no se puede pasar de "cancelada" a "atendida").
+            return back()->withErrors([
+                'estado' => "No se puede pasar de \"{$cita->estado}\" a \"{$datos['estado']}\".",
             ])->withInput();
         }
 
@@ -159,23 +195,14 @@ class CitaController extends Controller
      */
     public function destroy(Cita $cita)
     {
+        if ($cita->estaFinalizada()) {
+            return redirect()->route('citas.index')->withErrors([
+                'estado' => 'No se puede eliminar una cita ya atendida.',
+            ]);
+        }
+
         $cita->delete();
 
         return redirect()->route('citas.index')->with('exito', 'Cita eliminada correctamente.');
-    }
-
-    /**
-     * 'after_or_equal:today' de Laravel solo compara la FECHA (dia calendario),
-     * no la hora. Esto significa que si alguien elige "hoy" como fecha,
-     * podria colocar una hora que ya paso (ej: son las 18:00 y elige las 08:00).
-     * Este metodo combina fecha+hora en un solo momento y lo compara contra
-     * el reloj actual, para bloquear ese caso. (Misma logica que
-     * MisCitasController::esFechaHoraPasada()).
-     */
-    private function esFechaHoraPasada(string $fecha, string $hora): bool
-    {
-        $fechaHoraElegida = \Illuminate\Support\Carbon::parse($fecha . ' ' . $hora);
-
-        return $fechaHoraElegida->isPast();
     }
 }

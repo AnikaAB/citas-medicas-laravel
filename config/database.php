@@ -6,6 +6,16 @@ return [
     'default' => env('DB_CONNECTION', 'mysql'),
 
     'connections' => [
+        // Conexion en memoria usada exclusivamente por la suite de pruebas
+        // (ver phpunit.xml: DB_CONNECTION=sqlite, DB_DATABASE=:memory:).
+        // Sin esta entrada, PHPUnit no puede migrar ni correr ningun test.
+        'sqlite' => [
+            'driver' => 'sqlite',
+            'database' => env('DB_DATABASE', database_path('database.sqlite')),
+            'prefix' => '',
+            'foreign_key_constraints' => env('DB_FOREIGN_KEYS', true),
+        ],
+
         // MariaDB es compatible con el driver 'mysql' de Laravel.
         'mysql' => [
             'driver' => 'mysql',

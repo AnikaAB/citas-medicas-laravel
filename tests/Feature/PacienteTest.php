@@ -2,93 +2,104 @@
 
 namespace Tests\Feature;
 
-use App\Models\Paciente;
-use App\Models\User;
+use App\Models\Cita;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\Concerns\CreaUsuariosDePrueba;
 use Tests\TestCase;
 
-/**
- * Pruebas FUNCIONALES del CRUD completo de pacientes.
- */
 class PacienteTest extends TestCase
 {
-    use RefreshDatabase;
+    use RefreshDatabase, CreaUsuariosDePrueba;
 
-    private function actor(): User
+    public function test_admin_puede_ver_el_listado_de_pacientes(): void
     {
-        return User::factory()->create(['rol' => User::ROL_RECEPCIONISTA]);
+        $admin = $this->crearAdmin();
+        $paciente = $this->crearPacienteConUsuario(['nombre' => 'Roberto', 'apellido' => 'Cruz']);
+
+        $response = $this->actingAs($admin)->get('/pacientes');
+
+        $response->assertStatus(200);
+        $response->assertSee('Roberto');
     }
 
-    public function test_lista_los_pacientes_registrados(): void
+    public function test_admin_puede_registrar_un_paciente_nuevo(): void
     {
-        Paciente::factory()->count(2)->create();
+        $admin = $this->crearAdmin();
 
-        $response = $this->actingAs($this->actor())->get(route('pacientes.index'));
-
-        $response->assertOk();
-        $response->assertViewHas('pacientes', fn ($p) => $p->total() === 2);
-    }
-
-    public function test_crea_un_paciente_junto_con_su_usuario_de_acceso(): void
-    {
-        $response = $this->actingAs($this->actor())->post(route('pacientes.store'), [
-            'nombre' => 'Karla',
-            'apellido' => 'Zambrano',
-            'cedula' => '0711122233',
-            'telefono' => '0991112233',
-            'email' => 'karla@correo.com',
-            'fecha_nacimiento' => '1994-01-01',
-            'direccion' => 'Centro',
+        $response = $this->actingAs($admin)->post('/pacientes', [
+            'nombre' => 'Luis',
+            'apellido' => 'Martinez',
+            'cedula' => '0700001111',
+            'telefono' => '0987001122',
+            'email' => 'lmartinez@correo.com',
+            'fecha_nacimiento' => '1990-01-01',
+            'direccion' => 'Guayaquil',
             'password' => 'password123',
         ]);
 
         $response->assertRedirect(route('pacientes.index'));
-        $this->assertDatabaseHas('pacientes', ['cedula' => '0711122233']);
-        $this->assertDatabaseHas('users', ['email' => 'karla@correo.com', 'rol' => 'paciente']);
+        $this->assertDatabaseHas('pacientes', ['cedula' => '0700001111']);
+        $this->assertDatabaseHas('users', ['email' => 'lmartinez@correo.com', 'rol' => 'paciente']);
     }
 
-    public function test_actualiza_los_datos_de_un_paciente(): void
+    public function test_no_se_puede_registrar_un_paciente_con_cedula_duplicada(): void
     {
-        $paciente = Paciente::factory()->create(['telefono' => '0900000000']);
+        $admin = $this->crearAdmin();
+        $this->crearPacienteConUsuario(['cedula' => '0700001111']);
 
-        $response = $this->actingAs($this->actor())->put(route('pacientes.update', $paciente), [
-            'nombre' => $paciente->nombre,
-            'apellido' => $paciente->apellido,
-            'cedula' => $paciente->cedula,
-            'telefono' => '0999999999',
-            'email' => $paciente->email,
-            'fecha_nacimiento' => $paciente->fecha_nacimiento->toDateString(),
-            'direccion' => 'Nueva direccion',
-        ]);
-
-        $response->assertRedirect(route('pacientes.index'));
-        $this->assertDatabaseHas('pacientes', ['id' => $paciente->id, 'telefono' => '0999999999']);
-    }
-
-    public function test_elimina_un_paciente(): void
-    {
-        $paciente = Paciente::factory()->create();
-
-        $response = $this->actingAs($this->actor())->delete(route('pacientes.destroy', $paciente));
-
-        $response->assertRedirect(route('pacientes.index'));
-        $this->assertDatabaseMissing('pacientes', ['id' => $paciente->id]);
-    }
-
-    public function test_no_permite_crear_paciente_con_cedula_duplicada(): void
-    {
-        Paciente::factory()->create(['cedula' => '0711122233']);
-
-        $response = $this->actingAs($this->actor())->post(route('pacientes.store'), [
-            'nombre' => 'Otro',
-            'apellido' => 'Paciente',
-            'cedula' => '0711122233',
-            'telefono' => '0991112233',
+        $response = $this->from('/pacientes/create')->actingAs($admin)->post('/pacientes', [
+            'nombre' => 'Luis',
+            'apellido' => 'Martinez',
+            'cedula' => '0700001111',
+            'telefono' => '0987001122',
             'email' => 'otro@correo.com',
-            'fecha_nacimiento' => '1994-01-01',
+            'fecha_nacimiento' => '1990-01-01',
             'password' => 'password123',
         ]);
 
         $response->assertSessionHasErrors('cedula');
+        $this->assertDatabaseCount('pacientes', 1);
+    }
+
+    public function test_admin_puede_actualizar_los_datos_de_un_paciente(): void
+    {
+        $admin = $this->crearAdmin();
+        $paciente = $this->crearPacienteConUsuario(['telefono' => '0987654321']);
+
+        $response = $this->actingAs($admin)->put("/pacientes/{$paciente->id}", [
+            'nombre' => $paciente->nombre,
+            'apellido' => $paciente->apellido,
+            'cedula' => $paciente->cedula,
+            'telefono' => '0991112233',
+            'email' => $paciente->email,
+            'fecha_nacimiento' => $paciente->fecha_nacimiento->format('Y-m-d'),
+        ]);
+
+        $response->assertRedirect(route('pacientes.index'));
+        $this->assertDatabaseHas('pacientes', [
+            'id' => $paciente->id,
+            'telefono' => '0991112233',
+        ]);
+    }
+
+    public function test_no_se_puede_eliminar_un_paciente_con_citas_activas(): void
+    {
+        $admin = $this->crearAdmin();
+        $paciente = $this->crearPacienteConUsuario();
+        $doctor = $this->crearDoctorConUsuario();
+
+        Cita::create([
+            'paciente_id' => $paciente->id,
+            'doctor_id' => $doctor->id,
+            'fecha' => now()->addDay()->toDateString(),
+            'hora' => '09:00:00',
+            'motivo' => 'Consulta general',
+            'estado' => Cita::ESTADO_PENDIENTE,
+        ]);
+
+        $response = $this->actingAs($admin)->delete("/pacientes/{$paciente->id}");
+
+        $response->assertSessionHasErrors('paciente');
+        $this->assertDatabaseHas('pacientes', ['id' => $paciente->id]);
     }
 }

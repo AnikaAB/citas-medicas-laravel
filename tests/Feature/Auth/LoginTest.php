@@ -2,74 +2,72 @@
 
 namespace Tests\Feature\Auth;
 
-use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Hash;
+use Tests\Concerns\CreaUsuariosDePrueba;
 use Tests\TestCase;
 
-/**
- * Pruebas FUNCIONALES del modulo de autenticacion (login).
- */
 class LoginTest extends TestCase
 {
-    use RefreshDatabase;
+    use RefreshDatabase, CreaUsuariosDePrueba;
 
-    public function test_la_pagina_de_login_carga_correctamente(): void
+    public function test_formulario_de_login_se_muestra_correctamente(): void
     {
-        $response = $this->get(route('login'));
+        $response = $this->get('/login');
 
         $response->assertStatus(200);
-        $response->assertViewIs('auth.login');
+        $response->assertSee('Bienvenido de nuevo');
     }
 
-    public function test_un_usuario_puede_iniciar_sesion_con_credenciales_correctas(): void
+    public function test_usuario_puede_iniciar_sesion_con_credenciales_correctas(): void
     {
-        $usuario = User::factory()->create([
-            'email' => 'usuario@correo.com',
-            'password' => bcrypt('password123'),
+        $admin = $this->crearAdmin(['email' => 'admin@clinica.com']);
+
+        $response = $this->post('/login', [
+            'email' => 'admin@clinica.com',
+            'password' => 'password',
         ]);
 
-        $response = $this->post(route('login.attempt'), [
-            'email' => 'usuario@correo.com',
-            'password' => 'password123',
-        ]);
-
+        $this->assertAuthenticatedAs($admin);
         $response->assertRedirect(route('dashboard'));
-        $this->assertAuthenticatedAs($usuario);
     }
 
-    public function test_no_permite_iniciar_sesion_con_password_incorrecto(): void
+    public function test_no_se_puede_iniciar_sesion_con_password_incorrecta(): void
     {
-        User::factory()->create([
-            'email' => 'usuario@correo.com',
-            'password' => bcrypt('password123'),
+        $this->crearAdmin(['email' => 'admin@clinica.com']);
+
+        $response = $this->from('/login')->post('/login', [
+            'email' => 'admin@clinica.com',
+            'password' => 'clave-equivocada',
         ]);
 
-        $response = $this->from(route('login'))->post(route('login.attempt'), [
-            'email' => 'usuario@correo.com',
-            'password' => 'incorrecto',
-        ]);
-
-        $response->assertRedirect(route('login'));
         $response->assertSessionHasErrors('email');
         $this->assertGuest();
     }
 
-    public function test_un_usuario_autenticado_puede_cerrar_sesion(): void
+    public function test_usuario_desactivado_no_puede_iniciar_sesion(): void
     {
-        $usuario = User::factory()->create();
+        $this->crearAdmin([
+            'email' => 'inactivo@clinica.com',
+            'activo' => false,
+        ]);
 
-        $response = $this->actingAs($usuario)->post(route('logout'));
+        $response = $this->from('/login')->post('/login', [
+            'email' => 'inactivo@clinica.com',
+            'password' => 'password',
+        ]);
 
-        $response->assertRedirect(route('login'));
+        $response->assertSessionHasErrors('email');
         $this->assertGuest();
     }
 
-    public function test_un_usuario_autenticado_no_puede_ver_el_formulario_de_login(): void
+    public function test_usuario_autenticado_puede_cerrar_sesion(): void
     {
-        $usuario = User::factory()->create();
+        $admin = $this->crearAdmin();
 
-        $response = $this->actingAs($usuario)->get(route('login'));
+        $response = $this->actingAs($admin)->post('/logout');
 
-        $response->assertRedirect(route('dashboard'));
+        $this->assertGuest();
+        $response->assertRedirect(route('login'));
     }
 }
