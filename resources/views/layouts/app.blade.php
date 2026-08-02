@@ -310,6 +310,11 @@
                                 <i class="bi bi-clipboard2-pulse"></i>Doctores
                             </a>
                         </li>
+                        <li class="nav-item">
+                            <a class="nav-link {{ request()->routeIs('usuarios.*') ? 'active' : '' }}" href="{{ route('usuarios.index') }}">
+                                <i class="bi bi-people-fill"></i>Usuarios
+                            </a>
+                        </li>
                     @endif
                 </ul>
                 <div class="d-flex align-items-center gap-3">
