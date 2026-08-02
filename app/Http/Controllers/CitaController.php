@@ -69,6 +69,14 @@ class CitaController extends Controller
             'observaciones' => ['nullable', 'string'],
         ]);
 
+        // 'after_or_equal:today' solo revisa la FECHA. Si se elige el dia de
+        // hoy, todavia falta validar que la HORA no haya pasado ya.
+        if ($this->esFechaHoraPasada($datos['fecha'], $datos['hora'])) {
+            return back()->withErrors([
+                'hora' => 'No se puede registrar una cita en una fecha y hora que ya paso.',
+            ])->withInput();
+        }
+
         // El formulario envia la hora como "H:i" (ej. "10:00"), pero se
         // normaliza siempre a "H:i:s" antes de comparar/guardar. Sin esto,
         // "10:00" y "10:00:00" se tratan como valores distintos al comparar
@@ -156,7 +164,7 @@ class CitaController extends Controller
         $datos = $request->validate([
             'paciente_id' => ['required', 'exists:pacientes,id'],
             'doctor_id' => ['required', 'exists:doctores,id'],
-            'fecha' => ['required', 'date'],
+            'fecha' => ['required', 'date', 'after_or_equal:today'],
             'hora' => ['required', 'date_format:H:i'],
             'motivo' => ['required', 'string', 'max:255'],
             // Para admin, "estado" es irrelevante: se acepta cualquier cosa (o nada)
@@ -166,6 +174,14 @@ class CitaController extends Controller
                 : ['required', 'in:pendiente,confirmada,cancelada,atendida'],
             'observaciones' => ['nullable', 'string'],
         ]);
+
+        // 'after_or_equal:today' solo revisa la FECHA. Si se elige el dia de
+        // hoy, todavia falta validar que la HORA no haya pasado ya.
+        if ($this->esFechaHoraPasada($datos['fecha'], $datos['hora'])) {
+            return back()->withErrors([
+                'hora' => 'No se puede reprogramar una cita a una fecha y hora que ya paso.',
+            ])->withInput();
+        }
 
         // Misma normalizacion que en store(): la hora siempre se compara y
         // guarda en formato "H:i:s".
@@ -220,5 +236,13 @@ class CitaController extends Controller
         $cita->delete();
 
         return redirect()->route('citas.index')->with('exito', 'Cita eliminada correctamente.');
+    }
+
+    /**
+     * Indica si una combinacion fecha+hora ya paso respecto de ahora mismo.
+     */
+    private function esFechaHoraPasada(string $fecha, string $hora): bool
+    {
+        return \Illuminate\Support\Carbon::parse($fecha . ' ' . $hora)->isPast();
     }
 }
