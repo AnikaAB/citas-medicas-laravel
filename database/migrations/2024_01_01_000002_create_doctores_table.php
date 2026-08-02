@@ -10,10 +10,11 @@ return new class extends Migration
     {
         Schema::create('doctores', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('user_id')->nullable()->constrained('users')->nullOnDelete();
-            $table->string('nombre');
-            $table->string('apellido');
-            $table->string('especialidad');
+            $table->foreignId('user_id')->nullable()
+                ->constrained('users')->nullOnDelete();
+            $table->string('nombre', 100);
+            $table->string('apellido', 100);
+            $table->string('especialidad', 100);
             $table->string('telefono', 20);
             $table->string('email')->unique();
             $table->time('horario_inicio')->default('08:00:00');

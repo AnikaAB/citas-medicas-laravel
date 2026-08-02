@@ -2,33 +2,30 @@
 
 namespace Database\Seeders;
 
-use App\Models\Doctor;
-use App\Models\User;
 use Illuminate\Database\Seeder;
-use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Carbon;
 
 class DoctoresSeeder extends Seeder
 {
+    /**
+     * Perfiles de doctores, ligados a su user_id (9 al 13, creados en UsersSeeder).
+     */
     public function run(): void
     {
+        $now = Carbon::now();
+
         $doctores = [
-            ['Ricardo', 'Alvarado Peña', 'Medicina General', '0991234561', 'ralvarado@clinica.com'],
-            ['Sofia', 'Mendoza Cruz', 'Pediatria', '0991234562', 'smendoza@clinica.com'],
-            ['Miguel', 'Torres Chavez', 'Cardiologia', '0991234563', 'mtorres@clinica.com'],
-            ['Paola', 'Ibarra Salinas', 'Ginecologia', '0991234564', 'pibarra@clinica.com'],
-            ['Fernando', 'Rojas Delgado', 'Dermatologia', '0991234565', 'frojas@clinica.com'],
+            [9,  'Ricardo',  'Alvarado Pena',  'Medicina General', '0991234561', 'ralvarado@clinica.com'],
+            [10, 'Sofia',    'Mendoza Cruz',   'Pediatria',        '0991234562', 'smendoza@clinica.com'],
+            [11, 'Miguel',   'Torres Chavez',  'Cardiologia',      '0991234563', 'mtorres@clinica.com'],
+            [12, 'Paola',    'Ibarra Salinas', 'Ginecologia',      '0991234564', 'pibarra@clinica.com'],
+            [13, 'Fernando', 'Rojas Delgado',  'Dermatologia',     '0991234565', 'frojas@clinica.com'],
         ];
 
-        foreach ($doctores as [$nombre, $apellido, $especialidad, $telefono, $email]) {
-            $user = User::create([
-                'name' => "Dr. $nombre $apellido",
-                'email' => $email,
-                'password' => Hash::make('password'),
-                'rol' => User::ROL_DOCTOR,
-            ]);
-
-            Doctor::create([
-                'user_id' => $user->id,
+        foreach ($doctores as [$userId, $nombre, $apellido, $especialidad, $telefono, $email]) {
+            DB::table('doctores')->insert([
+                'user_id' => $userId,
                 'nombre' => $nombre,
                 'apellido' => $apellido,
                 'especialidad' => $especialidad,
@@ -36,6 +33,8 @@ class DoctoresSeeder extends Seeder
                 'email' => $email,
                 'horario_inicio' => '08:00:00',
                 'horario_fin' => '17:00:00',
+                'created_at' => $now,
+                'updated_at' => $now,
             ]);
         }
     }

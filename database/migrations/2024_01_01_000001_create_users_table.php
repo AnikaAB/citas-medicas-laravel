@@ -15,8 +15,11 @@ return new class extends Migration
             $table->timestamp('email_verified_at')->nullable();
             $table->string('password');
             $table->enum('rol', ['admin', 'recepcionista', 'doctor', 'paciente'])
-                  ->default('paciente')
-                  ->comment('Rol del usuario dentro del sistema');
+                ->default('paciente')
+                ->comment('Rol del usuario dentro del sistema');
+            $table->boolean('activo')
+                ->default(true)
+                ->comment('Si es 0, el usuario no puede iniciar sesion (cuenta desactivada por el admin)');
             $table->rememberToken();
             $table->timestamps();
         });

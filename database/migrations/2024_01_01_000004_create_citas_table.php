@@ -10,18 +10,28 @@ return new class extends Migration
     {
         Schema::create('citas', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('paciente_id')->constrained('pacientes')->cascadeOnDelete();
-            $table->foreignId('doctor_id')->constrained('doctores')->cascadeOnDelete();
-            $table->foreignId('creado_por')->nullable()->constrained('users')->nullOnDelete();
+
+            $table->foreignId('paciente_id')
+                ->constrained('pacientes')->restrictOnDelete();
+
+            $table->foreignId('doctor_id')
+                ->constrained('doctores')->restrictOnDelete();
+
+            $table->foreignId('creado_por')->nullable()
+                ->constrained('users')->nullOnDelete();
+
             $table->date('fecha');
             $table->time('hora');
             $table->string('motivo');
-            $table->enum('estado', ['pendiente', 'confirmada', 'cancelada', 'atendida'])->default('pendiente');
+            $table->enum('estado', ['pendiente', 'confirmada', 'cancelada', 'atendida'])
+                ->default('pendiente');
             $table->text('observaciones')->nullable();
             $table->timestamps();
 
-            // Un mismo doctor no puede tener dos citas a la misma fecha/hora
-            $table->unique(['doctor_id', 'fecha', 'hora']);
+            // Nota: NO se define UNIQUE(doctor_id, fecha, hora) a nivel de BD.
+            // La regla "un doctor no puede tener dos citas activas en la misma
+            // fecha/hora" se valida solo en la aplicacion (CitaController),
+            // donde se excluyen las citas con estado = 'cancelada'.
         });
     }
 
