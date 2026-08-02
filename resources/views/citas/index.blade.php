@@ -3,7 +3,9 @@
 @section('contenido')
 <div class="d-flex justify-content-between align-items-center mb-3">
     <h3><i class="bi bi-calendar2-week me-2"></i>Gestión de Citas</h3>
-    <a href="{{ route('citas.create') }}" class="btn btn-primary"><i class="bi bi-plus-lg me-1"></i>Nueva cita</a>
+    @if(auth()->user()->esAdmin() || auth()->user()->esRecepcionista())
+        <a href="{{ route('citas.create') }}" class="btn btn-primary"><i class="bi bi-plus-lg me-1"></i>Nueva cita</a>
+    @endif
 </div>
 
 <form class="row g-2 mb-3" method="GET">
@@ -39,11 +41,15 @@
             <td>{{ \Illuminate\Support\Carbon::parse($cita->hora)->format('H:i') }}</td>
             <td><x-estado-badge :estado="$cita->estado" /></td>
             <td>
-                <a href="{{ route('citas.edit', $cita) }}" class="btn btn-sm btn-warning">Editar</a>
-                <form action="{{ route('citas.destroy', $cita) }}" method="POST" class="d-inline" onsubmit="return confirm('¿Eliminar esta cita?')">
-                    @csrf @method('DELETE')
-                    <button class="btn btn-sm btn-danger">Eliminar</button>
-                </form>
+                @if(auth()->user()->esAdmin() || auth()->user()->esRecepcionista())
+                    <a href="{{ route('citas.edit', $cita) }}" class="btn btn-sm btn-warning">Editar</a>
+                    <form action="{{ route('citas.destroy', $cita) }}" method="POST" class="d-inline" onsubmit="return confirm('¿Eliminar esta cita?')">
+                        @csrf @method('DELETE')
+                        <button class="btn btn-sm btn-danger">Eliminar</button>
+                    </form>
+                @else
+                    <a href="{{ route('citas.show', $cita) }}" class="btn btn-sm btn-outline-secondary">Ver</a>
+                @endif
             </td>
         </tr>
         @empty

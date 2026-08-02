@@ -36,11 +36,23 @@
     </div>
     <div class="mb-3">
         <label class="form-label">Estado</label>
-        <select name="estado" class="form-select" required>
-            @foreach(['pendiente','confirmada','cancelada','atendida'] as $estado)
-                <option value="{{ $estado }}" @selected($cita->estado==$estado)>{{ ucfirst($estado) }}</option>
-            @endforeach
-        </select>
+        @if(auth()->user()->esAdmin())
+            {{-- El admin no gestiona el flujo clinico de la cita: se muestra
+                 como texto informativo (el backend tambien lo ignora si se
+                 manipula el form). No se envia campo "estado" para admin. --}}
+            <div><x-estado-badge :estado="$cita->estado" /></div>
+            <div class="form-text">Como administrador no puedes cambiar el estado clínico de la cita.</div>
+        @else
+            {{-- Solo se muestran las transiciones validas desde el estado
+                 actual (maquina de estados definida en Cita::TRANSICIONES).
+                 Esto es solo UX: el servidor vuelve a validar la transicion. --}}
+            <select name="estado" class="form-select" required>
+                <option value="{{ $cita->estado }}" selected>{{ ucfirst($cita->estado) }} (actual)</option>
+                @foreach(\App\Models\Cita::TRANSICIONES[$cita->estado] ?? [] as $siguiente)
+                    <option value="{{ $siguiente }}">{{ ucfirst($siguiente) }}</option>
+                @endforeach
+            </select>
+        @endif
     </div>
     <div class="mb-3">
         <label class="form-label">Observaciones</label>
