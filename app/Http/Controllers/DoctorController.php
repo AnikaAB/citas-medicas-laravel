@@ -27,11 +27,13 @@ class DoctorController extends Controller
             'nombre' => ['required', 'string', 'max:100'],
             'apellido' => ['required', 'string', 'max:100'],
             'especialidad' => ['required', 'string', 'max:100'],
-            'telefono' => ['required', 'string', 'max:20'],
+            'telefono' => ['required', 'string', 'regex:/^[0-9]{7,10}$/'],
             'email' => ['required', 'email', 'unique:doctores,email', 'unique:users,email'],
             'horario_inicio' => ['required', 'date_format:H:i'],
             'horario_fin' => ['required', 'date_format:H:i', 'after:horario_inicio'],
             'password' => ['required', 'string', 'min:8'],
+        ], [
+            'telefono.regex' => 'El telefono debe tener entre 7 y 10 digitos numericos, sin espacios ni guiones.',
         ]);
 
         $user = User::create([
@@ -73,10 +75,12 @@ class DoctorController extends Controller
             'nombre' => ['required', 'string', 'max:100'],
             'apellido' => ['required', 'string', 'max:100'],
             'especialidad' => ['required', 'string', 'max:100'],
-            'telefono' => ['required', 'string', 'max:20'],
+            'telefono' => ['required', 'string', 'regex:/^[0-9]{7,10}$/'],
             'email' => ['required', 'email', 'unique:doctores,email,'.$doctor->id],
             'horario_inicio' => ['required', 'date_format:H:i'],
             'horario_fin' => ['required', 'date_format:H:i', 'after:horario_inicio'],
+        ], [
+            'telefono.regex' => 'El telefono debe tener entre 7 y 10 digitos numericos, sin espacios ni guiones.',
         ]);
 
         $doctor->update($datos);

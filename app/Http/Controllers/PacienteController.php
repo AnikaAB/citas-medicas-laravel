@@ -38,11 +38,13 @@ class PacienteController extends Controller
             'nombre' => ['required', 'string', 'max:100'],
             'apellido' => ['required', 'string', 'max:100'],
             'cedula' => ['required', 'string', 'max:15', 'unique:pacientes,cedula'],
-            'telefono' => ['required', 'string', 'max:20'],
+            'telefono' => ['required', 'string', 'regex:/^[0-9]{7,10}$/'],
             'email' => ['required', 'email', 'unique:pacientes,email', 'unique:users,email'],
             'fecha_nacimiento' => ['required', 'date', 'before:today'],
             'direccion' => ['nullable', 'string', 'max:255'],
             'password' => ['required', 'string', 'min:8'],
+        ], [
+            'telefono.regex' => 'El telefono debe tener entre 7 y 10 digitos numericos, sin espacios ni guiones.',
         ]);
 
         $user = User::create([
@@ -84,10 +86,12 @@ class PacienteController extends Controller
             'nombre' => ['required', 'string', 'max:100'],
             'apellido' => ['required', 'string', 'max:100'],
             'cedula' => ['required', 'string', 'max:15', 'unique:pacientes,cedula,'.$paciente->id],
-            'telefono' => ['required', 'string', 'max:20'],
+            'telefono' => ['required', 'string', 'regex:/^[0-9]{7,10}$/'],
             'email' => ['required', 'email', 'unique:pacientes,email,'.$paciente->id],
             'fecha_nacimiento' => ['required', 'date', 'before:today'],
             'direccion' => ['nullable', 'string', 'max:255'],
+        ], [
+            'telefono.regex' => 'El telefono debe tener entre 7 y 10 digitos numericos, sin espacios ni guiones.',
         ]);
 
         $paciente->update($datos);

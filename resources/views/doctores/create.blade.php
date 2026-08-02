@@ -10,7 +10,7 @@
     </div>
     <div class="mb-3"><label class="form-label">Especialidad</label><input name="especialidad" class="form-control" required value="{{ old('especialidad') }}"></div>
     <div class="row">
-        <div class="col-md-6 mb-3"><label class="form-label">Telefono</label><input name="telefono" class="form-control" required value="{{ old('telefono') }}"></div>
+        <div class="col-md-6 mb-3"><label class="form-label">Telefono</label><input name="telefono" class="form-control" required pattern="[0-9]{7,10}" title="Solo numeros, entre 7 y 10 digitos" value="{{ old('telefono') }}"></div>
         <div class="col-md-6 mb-3"><label class="form-label">Email</label><input type="email" name="email" class="form-control" required value="{{ old('email') }}"></div>
     </div>
     <div class="row">
