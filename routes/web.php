@@ -64,6 +64,11 @@ Route::middleware('auth')->group(function () {
     Route::middleware('rol:admin')->group(function () {
         Route::resource('doctores', DoctorController::class)->parameters(['doctores' => 'doctor']);
     });
+    // Usuarios: modulo basico de gestion, solo para admin.
+    Route::middleware('rol:admin')->group(function () {
+        Route::get('/usuarios', [\App\Http\Controllers\UserController::class, 'index'])->name('usuarios.index');
+        Route::patch('/usuarios/{usuario}/estado', [\App\Http\Controllers\UserController::class, 'alternarEstado'])->name('usuarios.alternarEstado');
+    });
 
     // Mis Citas: exclusivo para el paciente, solo sobre SUS PROPIAS citas.
     // Puede agendar, ver su historial, cancelar y reprogramar (con 24h+

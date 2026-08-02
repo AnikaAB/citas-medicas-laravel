@@ -310,6 +310,11 @@
                                 <i class="bi bi-clipboard2-pulse"></i>Doctores
                             </a>
                         </li>
+                        <li class="nav-item">
+                            <a class="nav-link <?php echo e(request()->routeIs('usuarios.*') ? 'active' : ''); ?>" href="<?php echo e(route('usuarios.index')); ?>">
+                                <i class="bi bi-people-fill"></i>Usuarios
+                            </a>
+                        </li>
                     <?php endif; ?>
                 </ul>
                 <div class="d-flex align-items-center gap-3">
