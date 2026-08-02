@@ -8,6 +8,7 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DoctorController;
 use App\Http\Controllers\MisCitasController;
 use App\Http\Controllers\PacienteController;
+use App\Http\Controllers\RecepcionistaController;
 use Illuminate\Support\Facades\Route;
 
 // --- Autenticacion ---
@@ -64,6 +65,17 @@ Route::middleware('auth')->group(function () {
     Route::middleware('rol:admin')->group(function () {
         Route::resource('doctores', DoctorController::class)->parameters(['doctores' => 'doctor']);
     });
+    // Recepcionistas: modulo propio y completo, exclusivo para admin.
+    Route::middleware('rol:admin')->group(function () {
+        Route::get('/recepcionistas', [RecepcionistaController::class, 'index'])->name('recepcionistas.index');
+        Route::get('/recepcionistas/nueva', [RecepcionistaController::class, 'create'])->name('recepcionistas.create');
+        Route::post('/recepcionistas', [RecepcionistaController::class, 'store'])->name('recepcionistas.store');
+        Route::get('/recepcionistas/{recepcionista}/editar', [RecepcionistaController::class, 'edit'])->name('recepcionistas.edit');
+        Route::put('/recepcionistas/{recepcionista}', [RecepcionistaController::class, 'update'])->name('recepcionistas.update');
+        Route::delete('/recepcionistas/{recepcionista}', [RecepcionistaController::class, 'destroy'])->name('recepcionistas.destroy');
+        Route::patch('/recepcionistas/{recepcionista}/activar', [RecepcionistaController::class, 'activar'])->name('recepcionistas.activar');
+    });
+
     // Usuarios: modulo basico de gestion, solo para admin.
     Route::middleware('rol:admin')->group(function () {
         Route::get('/usuarios', [\App\Http\Controllers\UserController::class, 'index'])->name('usuarios.index');

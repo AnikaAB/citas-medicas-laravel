@@ -311,6 +311,11 @@
                             </a>
                         </li>
                         <li class="nav-item">
+                            <a class="nav-link {{ request()->routeIs('recepcionistas.*') ? 'active' : '' }}" href="{{ route('recepcionistas.index') }}">
+                                <i class="bi bi-person-badge"></i>Recepcionistas
+                            </a>
+                        </li>
+                        <li class="nav-item">
                             <a class="nav-link {{ request()->routeIs('usuarios.*') ? 'active' : '' }}" href="{{ route('usuarios.index') }}">
                                 <i class="bi bi-people-fill"></i>Usuarios
                             </a>
