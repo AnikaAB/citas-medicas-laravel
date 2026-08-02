@@ -86,6 +86,19 @@ class DoctorController extends Controller
 
     public function destroy(Doctor $doctor)
     {
+        // No se puede eliminar un doctor que todavia tiene citas activas
+        // (pendientes o confirmadas): se perderia la trazabilidad de esas
+        // citas y el paciente se quedaria con una cita "huerfana".
+        $tieneCitasActivas = $doctor->citas()
+            ->whereIn('estado', ['pendiente', 'confirmada'])
+            ->exists();
+
+        if ($tieneCitasActivas) {
+            return redirect()->route('doctores.index')->withErrors([
+                'doctor' => 'No se puede eliminar al doctor: tiene citas pendientes o confirmadas. Cancélalas o reasígnalas primero.',
+            ]);
+        }
+
         $doctor->delete();
 
         return redirect()->route('doctores.index')->with('exito', 'Doctor eliminado correctamente.');

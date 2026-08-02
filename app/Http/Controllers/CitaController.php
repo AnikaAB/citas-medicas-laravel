@@ -114,8 +114,16 @@ class CitaController extends Controller
     /**
      * UPDATE - Formulario de edicion.
      */
-    public function edit(Cita $cita)
+    public function edit(Request $request, Cita $cita)
     {
+        // Defensa en profundidad: aunque las rutas de escritura ya estan
+        // restringidas a admin/recepcionista en web.php, se revisa el rol
+        // tambien aqui para que este controlador nunca dependa unicamente
+        // de como esten armadas las rutas.
+        if (! $request->user()->esAdmin() && ! $request->user()->esRecepcionista()) {
+            abort(403, 'No tienes permisos para editar citas.');
+        }
+
         if ($cita->estaFinalizada()) {
             return redirect()->route('citas.index')->withErrors([
                 'estado' => 'No se puede modificar una cita ya atendida.',
@@ -133,6 +141,10 @@ class CitaController extends Controller
      */
     public function update(Request $request, Cita $cita)
     {
+        if (! $request->user()->esAdmin() && ! $request->user()->esRecepcionista()) {
+            abort(403, 'No tienes permisos para editar citas.');
+        }
+
         if ($cita->estaFinalizada()) {
             return redirect()->route('citas.index')->withErrors([
                 'estado' => 'No se puede modificar una cita ya atendida.',
@@ -193,8 +205,12 @@ class CitaController extends Controller
     /**
      * DELETE - Eliminar (cancelar definitivamente) una cita.
      */
-    public function destroy(Cita $cita)
+    public function destroy(Request $request, Cita $cita)
     {
+        if (! $request->user()->esAdmin() && ! $request->user()->esRecepcionista()) {
+            abort(403, 'No tienes permisos para eliminar citas.');
+        }
+
         if ($cita->estaFinalizada()) {
             return redirect()->route('citas.index')->withErrors([
                 'estado' => 'No se puede eliminar una cita ya atendida.',

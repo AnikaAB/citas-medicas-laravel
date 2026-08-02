@@ -34,9 +34,25 @@ Route::middleware('auth')->group(function () {
 
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
-    // Citas: accesible por admin, recepcionista y doctor (lectura); paciente ve solo las suyas via dashboard
+    // Citas.
+    // Lectura (index/show): admin, recepcionista y doctor (el doctor solo ve
+    // su propia agenda, filtrado dentro del controlador).
+    // Escritura (create/store/edit/update/destroy): SOLO admin y recepcionista.
+    // Antes esto era un Route::resource() unico abierto a los 3 roles, lo
+    // que permitia a un doctor editar/eliminar citas ajenas escribiendo la
+    // URL directamente (el controlador no revisaba el rol en esas acciones).
+    Route::middleware('rol:admin,recepcionista')->group(function () {
+        Route::get('/citas/create', [CitaController::class, 'create'])->name('citas.create');
+        Route::post('/citas', [CitaController::class, 'store'])->name('citas.store');
+        Route::get('/citas/{cita}/edit', [CitaController::class, 'edit'])->name('citas.edit');
+        Route::put('/citas/{cita}', [CitaController::class, 'update'])->name('citas.update');
+        Route::patch('/citas/{cita}', [CitaController::class, 'update']);
+        Route::delete('/citas/{cita}', [CitaController::class, 'destroy'])->name('citas.destroy');
+    });
+
     Route::middleware('rol:admin,recepcionista,doctor')->group(function () {
-        Route::resource('citas', CitaController::class);
+        Route::get('/citas', [CitaController::class, 'index'])->name('citas.index');
+        Route::get('/citas/{cita}', [CitaController::class, 'show'])->name('citas.show');
     });
 
     // Pacientes: gestion completa solo para admin y recepcionista

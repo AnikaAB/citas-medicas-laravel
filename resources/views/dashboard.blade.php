@@ -7,21 +7,103 @@
 <h3 class="mb-1"><i class="bi bi-speedometer2 me-2"></i>Bienvenido, {{ $usuario->name }}</h3>
 <p class="text-muted mb-4">Este es el resumen de tu actividad en el sistema.</p>
 
-@if(in_array($usuario->rol, ['doctor','paciente']))
+<style>
+    .stats-card {
+        border-radius: 18px;
+        padding: 22px;
+        height: 100%;
+        background: linear-gradient(180deg, var(--panel), #0f1326);
+        border: 1px solid rgba(255,255,255,0.08);
+        position: relative;
+        overflow: hidden;
+    }
+    .stats-card::before {
+        content: '';
+        position: absolute;
+        inset: 0;
+        background: radial-gradient(400px 160px at 10% -10%, rgba(34,211,238,0.10), transparent 60%);
+        pointer-events: none;
+    }
+    .stats-card h6 {
+        font-size: 0.8rem;
+        text-transform: uppercase;
+        letter-spacing: 0.6px;
+        font-weight: 700;
+        color: rgba(230,233,245,0.55);
+        margin-bottom: 22px;
+    }
+
+    /* --- Grafico de barras (citas por estado) --- */
+    .bar-chart { display: flex; align-items: flex-end; justify-content: space-around; height: 190px; gap: 10px; }
+    .bar-col { display: flex; flex-direction: column; align-items: center; flex: 1; }
+    .bar-value { font-weight: 800; font-size: 1.05rem; color: var(--ink); margin-bottom: 8px; }
+    .bar-track { width: 100%; max-width: 46px; height: 140px; display: flex; align-items: flex-end; }
+    .bar-fill {
+        width: 100%;
+        border-radius: 8px 8px 3px 3px;
+        position: relative;
+        transform-origin: bottom;
+        animation: growBar 0.7s cubic-bezier(.2,.8,.2,1) both;
+        box-shadow: 0 0 22px -4px var(--bar-glow, transparent), inset 0 1px 0 rgba(255,255,255,0.35);
+    }
+    .bar-fill::after {
+        content: '';
+        position: absolute; inset: 0;
+        border-radius: inherit;
+        background: linear-gradient(180deg, rgba(255,255,255,0.28), transparent 55%);
+    }
+    @keyframes growBar { from { transform: scaleY(0); opacity: 0; } to { transform: scaleY(1); opacity: 1; } }
+    .bar-label { display: flex; align-items: center; gap: 6px; margin-top: 12px; font-size: 0.8rem; color: rgba(230,233,245,0.75); font-weight: 600; }
+    .bar-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--bar-glow, #94a3b8); box-shadow: 0 0 8px var(--bar-glow, transparent); }
+
+    /* --- Ranking de especialidades (admin) --- */
+    .spec-row { margin-bottom: 16px; }
+    .spec-row:last-child { margin-bottom: 0; }
+    .spec-row-top { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 6px; }
+    .spec-rank {
+        display: inline-flex; align-items: center; justify-content: center;
+        width: 20px; height: 20px; border-radius: 6px; margin-right: 10px;
+        font-size: 0.7rem; font-weight: 800; color: #0c1020;
+        background: linear-gradient(135deg, var(--neon-cyan), var(--neon-purple));
+    }
+    .spec-name { font-weight: 600; color: var(--ink); font-size: 0.92rem; }
+    .spec-count { font-weight: 800; color: var(--neon-cyan); font-size: 0.92rem; }
+    .spec-bar-track { height: 8px; border-radius: 999px; background: rgba(255,255,255,0.06); overflow: hidden; }
+    .spec-bar-fill {
+        height: 100%; border-radius: 999px;
+        background: linear-gradient(90deg, var(--neon-cyan), var(--brand-2));
+        animation: growWidth 0.8s cubic-bezier(.2,.8,.2,1) both;
+    }
+    @keyframes growWidth { from { width: 0%; } }
+
+    /* --- Proximas citas (doctor) --- */
+    .upcoming-row { display: flex; align-items: center; gap: 14px; padding: 10px 0; border-bottom: 1px solid rgba(255,255,255,0.06); }
+    .upcoming-row:last-child { border-bottom: none; padding-bottom: 0; }
+    .upcoming-date {
+        width: 46px; height: 46px; border-radius: 12px; flex-shrink: 0;
+        display: flex; flex-direction: column; align-items: center; justify-content: center;
+        background: linear-gradient(135deg, var(--neon-cyan), var(--brand-2)); color: #0c1020;
+    }
+    .upcoming-day { font-weight: 800; font-size: 1rem; line-height: 1; }
+    .upcoming-month { font-size: 0.62rem; font-weight: 700; letter-spacing: 0.3px; }
+    .upcoming-info { flex: 1; min-width: 0; }
+    .upcoming-name { font-weight: 600; color: var(--ink); font-size: 0.92rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .upcoming-time { font-size: 0.78rem; color: rgba(230,233,245,0.55); }
+</style>
+
+@if($usuario->esPaciente())
     <div class="d-flex justify-content-between align-items-center mb-3">
         <h5 class="mb-0"><i class="bi bi-calendar2-week me-2"></i>Tus próximas citas</h5>
-        @if($usuario->esPaciente())
-            <a href="{{ route('mis-citas.index') }}" class="btn btn-sm btn-primary">
-                <i class="bi bi-calendar2-heart"></i> Gestionar mis citas
-            </a>
-        @endif
+        <a href="{{ route('mis-citas.index') }}" class="btn btn-sm btn-primary">
+            <i class="bi bi-calendar2-heart"></i> Gestionar mis citas
+        </a>
     </div>
     <table class="table table-hover align-middle">
         <thead>
             <tr>
                 <th>Fecha</th>
                 <th>Hora</th>
-                <th>{{ $usuario->esDoctor() ? 'Paciente' : 'Doctor' }}</th>
+                <th>Doctor</th>
                 <th>Motivo</th>
                 <th>Estado</th>
             </tr>
@@ -31,7 +113,7 @@
             <tr>
                 <td>{{ $cita->fecha->format('d/m/Y') }}</td>
                 <td>{{ \Illuminate\Support\Carbon::parse($cita->hora)->format('H:i') }}</td>
-                <td>{{ $usuario->esDoctor() ? $cita->paciente->nombre.' '.$cita->paciente->apellido : 'Dr. '.$cita->doctor->nombre.' '.$cita->doctor->apellido }}</td>
+                <td>Dr. {{ $cita->doctor->nombre }} {{ $cita->doctor->apellido }}</td>
                 <td>{{ $cita->motivo }}</td>
                 <td><x-estado-badge :estado="$cita->estado" /></td>
             </tr>
@@ -40,6 +122,58 @@
             @endforelse
         </tbody>
     </table>
+
+@elseif($usuario->esDoctor())
+    <h5 class="mb-3"><i class="bi bi-bar-chart-line me-2"></i>Resumen de tu agenda</h5>
+    <div class="row g-3">
+        <div class="col-lg-6">
+            <div class="stats-card">
+                <h6><i class="bi bi-pie-chart-fill me-1"></i>Tus citas por estado</h6>
+                @php
+                    $maxEstado = max($citasPorEstado->max(), 1);
+                    $colores = [
+                        'pendiente' => '#8b93a7',
+                        'confirmada' => '#3b82f6',
+                        'atendida' => '#22c55e',
+                        'cancelada' => '#f43f5e',
+                    ];
+                @endphp
+                <div class="bar-chart">
+                    @foreach($citasPorEstado as $estado => $cantidad)
+                        @php $color = $colores[$estado] ?? '#94a3b8'; @endphp
+                        <div class="bar-col">
+                            <div class="bar-value">{{ $cantidad }}</div>
+                            <div class="bar-track">
+                                <div class="bar-fill" style="--bar-glow: {{ $color }}; background: linear-gradient(180deg, {{ $color }}, color-mix(in srgb, {{ $color }} 55%, #0c1020)); height: {{ max((int) round(($cantidad / $maxEstado) * 100), 6) }}%; animation-delay: {{ $loop->index * 0.08 }}s;"></div>
+                            </div>
+                            <div class="bar-label"><span class="bar-dot" style="--bar-glow: {{ $color }};"></span>{{ ucfirst($estado) }}</div>
+                        </div>
+                    @endforeach
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-6">
+            <div class="stats-card">
+                <h6><i class="bi bi-calendar2-week-fill me-1"></i>Próximas citas</h6>
+                @forelse($proximasCitas as $cita)
+                    <div class="upcoming-row">
+                        <div class="upcoming-date">
+                            <div class="upcoming-day">{{ $cita->fecha->format('d') }}</div>
+                            <div class="upcoming-month">{{ $cita->fecha->format('m') }}/{{ $cita->fecha->format('y') }}</div>
+                        </div>
+                        <div class="upcoming-info">
+                            <div class="upcoming-name">{{ $cita->paciente->nombre }} {{ $cita->paciente->apellido }}</div>
+                            <div class="upcoming-time"><i class="bi bi-clock me-1"></i>{{ \Illuminate\Support\Carbon::parse($cita->hora)->format('H:i') }} · {{ $cita->motivo }}</div>
+                        </div>
+                        <x-estado-badge :estado="$cita->estado" />
+                    </div>
+                @empty
+                    <p class="text-muted mb-0"><i class="bi bi-calendar-x me-1"></i>No tienes citas próximas.</p>
+                @endforelse
+            </div>
+        </div>
+    </div>
+
 @else
     <div class="row g-3">
         <div class="col-md-3 col-sm-6">
@@ -74,6 +208,56 @@
     <div class="mt-4 p-3" style="background: rgba(251,191,36,0.12); border: 1px solid rgba(251,191,36,0.35); border-radius: 12px; color: #fcd34d;">
         <i class="bi bi-hourglass-split me-2"></i>
         Citas pendientes por confirmar: <strong>{{ $citasPendientes }}</strong>
+    </div>
+
+    <h5 class="mt-4 mb-3"><i class="bi bi-bar-chart-line me-2"></i>Estadísticas</h5>
+
+    <div class="row g-3">
+        <div class="col-lg-6">
+            <div class="stats-card">
+                <h6><i class="bi bi-pie-chart-fill me-1"></i>Citas por estado</h6>
+                @php
+                    $maxEstado = max($citasPorEstado->max(), 1);
+                    $colores = [
+                        'pendiente' => '#8b93a7',
+                        'confirmada' => '#3b82f6',
+                        'atendida' => '#22c55e',
+                        'cancelada' => '#f43f5e',
+                    ];
+                @endphp
+                <div class="bar-chart">
+                    @foreach($citasPorEstado as $estado => $cantidad)
+                        @php $color = $colores[$estado] ?? '#94a3b8'; @endphp
+                        <div class="bar-col">
+                            <div class="bar-value">{{ $cantidad }}</div>
+                            <div class="bar-track">
+                                <div class="bar-fill" style="--bar-glow: {{ $color }}; background: linear-gradient(180deg, {{ $color }}, color-mix(in srgb, {{ $color }} 55%, #0c1020)); height: {{ max((int) round(($cantidad / $maxEstado) * 100), 6) }}%; animation-delay: {{ $loop->index * 0.08 }}s;"></div>
+                            </div>
+                            <div class="bar-label"><span class="bar-dot" style="--bar-glow: {{ $color }};"></span>{{ ucfirst($estado) }}</div>
+                        </div>
+                    @endforeach
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-6">
+            <div class="stats-card">
+                <h6><i class="bi bi-clipboard2-pulse-fill me-1"></i>Citas por especialidad</h6>
+                @php $maxEspecialidad = max($citasPorEspecialidad->max() ?? 0, 1); @endphp
+                @forelse($citasPorEspecialidad as $especialidad => $cantidad)
+                    <div class="spec-row">
+                        <div class="spec-row-top">
+                            <span><span class="spec-rank">{{ $loop->iteration }}</span><span class="spec-name">{{ $especialidad }}</span></span>
+                            <span class="spec-count">{{ $cantidad }}</span>
+                        </div>
+                        <div class="spec-bar-track">
+                            <div class="spec-bar-fill" style="width: {{ max((int) round(($cantidad / $maxEspecialidad) * 100), 4) }}%; animation-delay: {{ $loop->index * 0.08 }}s;"></div>
+                        </div>
+                    </div>
+                @empty
+                    <p class="text-muted mb-0">Sin datos.</p>
+                @endforelse
+            </div>
+        </div>
     </div>
 @endif
 

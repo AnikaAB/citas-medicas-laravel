@@ -97,6 +97,18 @@ class PacienteController extends Controller
 
     public function destroy(Paciente $paciente)
     {
+        // Misma proteccion que en DoctorController: no se borra un paciente
+        // con citas activas (pendientes o confirmadas).
+        $tieneCitasActivas = $paciente->citas()
+            ->whereIn('estado', ['pendiente', 'confirmada'])
+            ->exists();
+
+        if ($tieneCitasActivas) {
+            return redirect()->route('pacientes.index')->withErrors([
+                'paciente' => 'No se puede eliminar al paciente: tiene citas pendientes o confirmadas. Cancélalas primero.',
+            ]);
+        }
+
         $paciente->delete();
 
         return redirect()->route('pacientes.index')->with('exito', 'Paciente eliminado correctamente.');
