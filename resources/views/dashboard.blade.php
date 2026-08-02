@@ -12,8 +12,9 @@
         border-radius: 18px;
         padding: 22px;
         height: 100%;
-        background: linear-gradient(180deg, var(--panel), #0f1326);
-        border: 1px solid rgba(255,255,255,0.08);
+        background: #ffffff;
+        border: 1px solid rgba(15,23,42,0.08);
+        box-shadow: 0 8px 24px rgba(15,23,42,0.06);
         position: relative;
         overflow: hidden;
     }
@@ -21,7 +22,7 @@
         content: '';
         position: absolute;
         inset: 0;
-        background: radial-gradient(400px 160px at 10% -10%, rgba(34,211,238,0.10), transparent 60%);
+        background: radial-gradient(400px 160px at 10% -10%, rgba(34,211,238,0.06), transparent 60%);
         pointer-events: none;
     }
     .stats-card h6 {
@@ -29,7 +30,7 @@
         text-transform: uppercase;
         letter-spacing: 0.6px;
         font-weight: 700;
-        color: rgba(230,233,245,0.55);
+        color: rgba(30,41,59,0.55);
         margin-bottom: 22px;
     }
 
@@ -44,7 +45,7 @@
         position: relative;
         transform-origin: bottom;
         animation: growBar 0.7s cubic-bezier(.2,.8,.2,1) both;
-        box-shadow: 0 0 22px -4px var(--bar-glow, transparent), inset 0 1px 0 rgba(255,255,255,0.35);
+        box-shadow: 0 0 16px -4px var(--bar-glow, transparent), inset 0 1px 0 rgba(255,255,255,0.35);
     }
     .bar-fill::after {
         content: '';
@@ -53,7 +54,7 @@
         background: linear-gradient(180deg, rgba(255,255,255,0.28), transparent 55%);
     }
     @keyframes growBar { from { transform: scaleY(0); opacity: 0; } to { transform: scaleY(1); opacity: 1; } }
-    .bar-label { display: flex; align-items: center; gap: 6px; margin-top: 12px; font-size: 0.8rem; color: rgba(230,233,245,0.75); font-weight: 600; }
+    .bar-label { display: flex; align-items: center; gap: 6px; margin-top: 12px; font-size: 0.8rem; color: rgba(30,41,59,0.7); font-weight: 600; }
     .bar-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--bar-glow, #94a3b8); box-shadow: 0 0 8px var(--bar-glow, transparent); }
 
     /* --- Ranking de especialidades (admin) --- */
@@ -63,12 +64,12 @@
     .spec-rank {
         display: inline-flex; align-items: center; justify-content: center;
         width: 20px; height: 20px; border-radius: 6px; margin-right: 10px;
-        font-size: 0.7rem; font-weight: 800; color: #0c1020;
+        font-size: 0.7rem; font-weight: 800; color: #ffffff;
         background: linear-gradient(135deg, var(--neon-cyan), var(--neon-purple));
     }
     .spec-name { font-weight: 600; color: var(--ink); font-size: 0.92rem; }
     .spec-count { font-weight: 800; color: var(--neon-cyan); font-size: 0.92rem; }
-    .spec-bar-track { height: 8px; border-radius: 999px; background: rgba(255,255,255,0.06); overflow: hidden; }
+    .spec-bar-track { height: 8px; border-radius: 999px; background: rgba(15,23,42,0.06); overflow: hidden; }
     .spec-bar-fill {
         height: 100%; border-radius: 999px;
         background: linear-gradient(90deg, var(--neon-cyan), var(--brand-2));
@@ -77,18 +78,53 @@
     @keyframes growWidth { from { width: 0%; } }
 
     /* --- Proximas citas (doctor) --- */
-    .upcoming-row { display: flex; align-items: center; gap: 14px; padding: 10px 0; border-bottom: 1px solid rgba(255,255,255,0.06); }
+    .upcoming-row { display: flex; align-items: center; gap: 14px; padding: 10px 0; border-bottom: 1px solid rgba(15,23,42,0.08); }
     .upcoming-row:last-child { border-bottom: none; padding-bottom: 0; }
     .upcoming-date {
         width: 46px; height: 46px; border-radius: 12px; flex-shrink: 0;
         display: flex; flex-direction: column; align-items: center; justify-content: center;
-        background: linear-gradient(135deg, var(--neon-cyan), var(--brand-2)); color: #0c1020;
+        background: linear-gradient(135deg, var(--neon-cyan), var(--brand-2)); color: #ffffff;
     }
     .upcoming-day { font-weight: 800; font-size: 1rem; line-height: 1; }
     .upcoming-month { font-size: 0.62rem; font-weight: 700; letter-spacing: 0.3px; }
     .upcoming-info { flex: 1; min-width: 0; }
     .upcoming-name { font-weight: 600; color: var(--ink); font-size: 0.92rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .upcoming-time { font-size: 0.78rem; color: rgba(230,233,245,0.55); }
+    .upcoming-time { font-size: 0.78rem; color: rgba(30,41,59,0.55); }
+
+    /* --- Tarjetas de estadisticas con ritmo cardiaco --- */
+    .stat-card-v2 {
+        border-radius: 16px;
+        padding: 20px;
+        height: 100%;
+        background: var(--accent-soft);
+        border: 1px solid var(--accent-soft-2);
+        position: relative;
+        overflow: hidden;
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+    .stat-card-v2:hover { transform: translateY(-3px); box-shadow: 0 10px 24px var(--accent-soft-2); }
+    .stat-card-v2-top { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 14px; }
+    .stat-card-v2-icon {
+        width: 44px; height: 44px; border-radius: 12px;
+        background: var(--accent-soft-2);
+        color: var(--accent);
+        display: flex; align-items: center; justify-content: center;
+        font-size: 1.2rem;
+        flex-shrink: 0;
+    }
+    .stat-card-v2-heartbeat {
+        width: 90px; height: 30px;
+        stroke: var(--accent);
+        opacity: 0.45;
+    }
+    .stat-card-v2-heartbeat polyline {
+        fill: none;
+        stroke-width: 2;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+    }
+    .stat-card-v2 h2 { font-weight: 800; margin: 0 0 2px 0; color: var(--accent); font-size: 1.9rem; }
+    .stat-card-v2 p { margin: 0; color: rgba(30,41,59,0.6); font-size: 0.88rem; font-weight: 600; }
 </style>
 
 @if($usuario->esPaciente())
@@ -177,35 +213,55 @@
 @else
     <div class="row g-3">
         <div class="col-md-3 col-sm-6">
-            <div class="stat-card" style="background: linear-gradient(135deg, #22d3ee, #7b3fe4); box-shadow: 0 12px 30px rgba(34,211,238,0.35);">
-                <div class="stat-icon"><i class="bi bi-clipboard2-pulse"></i></div>
+            <div class="stat-card-v2" style="--accent:#3b82f6; --accent-soft: rgba(59,130,246,0.07); --accent-soft-2: rgba(59,130,246,0.16);">
+                <div class="stat-card-v2-top">
+                    <div class="stat-card-v2-icon"><i class="bi bi-clipboard2-pulse"></i></div>
+                    <svg class="stat-card-v2-heartbeat" viewBox="0 0 120 40" preserveAspectRatio="none">
+                        <polyline points="0,20 18,20 25,8 33,32 41,20 55,20 63,5 71,35 79,20 120,20" />
+                    </svg>
+                </div>
                 <h2>{{ $totalDoctores }}</h2>
                 <p>Doctores</p>
             </div>
         </div>
         <div class="col-md-3 col-sm-6">
-            <div class="stat-card" style="background: linear-gradient(135deg, #34ead1, #0d9488); box-shadow: 0 12px 30px rgba(52,234,209,0.3);">
-                <div class="stat-icon"><i class="bi bi-people"></i></div>
+            <div class="stat-card-v2" style="--accent:#16a34a; --accent-soft: rgba(22,163,74,0.07); --accent-soft-2: rgba(22,163,74,0.16);">
+                <div class="stat-card-v2-top">
+                    <div class="stat-card-v2-icon"><i class="bi bi-people"></i></div>
+                    <svg class="stat-card-v2-heartbeat" viewBox="0 0 120 40" preserveAspectRatio="none">
+                        <polyline points="0,20 18,20 25,8 33,32 41,20 55,20 63,5 71,35 79,20 120,20" />
+                    </svg>
+                </div>
                 <h2>{{ $totalPacientes }}</h2>
                 <p>Pacientes</p>
             </div>
         </div>
         <div class="col-md-3 col-sm-6">
-            <div class="stat-card" style="background: linear-gradient(135deg, #fbbf24, #f97316); box-shadow: 0 12px 30px rgba(251,191,36,0.3);">
-                <div class="stat-icon"><i class="bi bi-calendar2-week"></i></div>
+            <div class="stat-card-v2" style="--accent:#f59e0b; --accent-soft: rgba(245,158,11,0.08); --accent-soft-2: rgba(245,158,11,0.18);">
+                <div class="stat-card-v2-top">
+                    <div class="stat-card-v2-icon"><i class="bi bi-calendar2-week"></i></div>
+                    <svg class="stat-card-v2-heartbeat" viewBox="0 0 120 40" preserveAspectRatio="none">
+                        <polyline points="0,20 18,20 25,8 33,32 41,20 55,20 63,5 71,35 79,20 120,20" />
+                    </svg>
+                </div>
                 <h2>{{ $totalCitas }}</h2>
                 <p>Citas totales</p>
             </div>
         </div>
         <div class="col-md-3 col-sm-6">
-            <div class="stat-card" style="background: linear-gradient(135deg, #f472b6, #a21caf); box-shadow: 0 12px 30px rgba(244,114,182,0.3);">
-                <div class="stat-icon"><i class="bi bi-calendar2-check"></i></div>
+            <div class="stat-card-v2" style="--accent:#9333ea; --accent-soft: rgba(147,51,234,0.07); --accent-soft-2: rgba(147,51,234,0.16);">
+                <div class="stat-card-v2-top">
+                    <div class="stat-card-v2-icon"><i class="bi bi-calendar2-check"></i></div>
+                    <svg class="stat-card-v2-heartbeat" viewBox="0 0 120 40" preserveAspectRatio="none">
+                        <polyline points="0,20 18,20 25,8 33,32 41,20 55,20 63,5 71,35 79,20 120,20" />
+                    </svg>
+                </div>
                 <h2>{{ $citasHoy }}</h2>
                 <p>Citas hoy</p>
             </div>
         </div>
     </div>
-    <div class="mt-4 p-3" style="background: rgba(251,191,36,0.12); border: 1px solid rgba(251,191,36,0.35); border-radius: 12px; color: #fcd34d;">
+    <div class="mt-4 p-3" style="background: rgba(245,158,11,0.1); border: 1px solid rgba(245,158,11,0.3); border-radius: 12px; color: #92400e;">
         <i class="bi bi-hourglass-split me-2"></i>
         Citas pendientes por confirmar: <strong>{{ $citasPendientes }}</strong>
     </div>

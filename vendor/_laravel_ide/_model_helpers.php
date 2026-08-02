@@ -12,9 +12,9 @@ namespace App\Models {
      * @property string $motivo
      * @property string $hora
      * @property \Illuminate\Support\Carbon $fecha
-     * @property mixed $creado_por
-     * @property mixed $doctor_id
-     * @property mixed $paciente_id
+     * @property int|null $creado_por
+     * @property int $doctor_id
+     * @property int $paciente_id
      * @property int $id
      * @property-read \App\Models\Paciente $paciente
      * @property-read \App\Models\Doctor $doctor
@@ -334,7 +334,7 @@ namespace App\Models {
      * @property string $especialidad
      * @property string $apellido
      * @property string $nombre
-     * @property mixed $user_id
+     * @property int|null $user_id
      * @property int $id
      * @property-read \App\Models\User $user
      * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Cita> $citas
@@ -654,7 +654,7 @@ namespace App\Models {
      * @property string $cedula
      * @property string $apellido
      * @property string $nombre
-     * @property mixed $user_id
+     * @property int|null $user_id
      * @property int $id
      * @property-read \App\Models\User $user
      * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Cita> $citas
