@@ -85,4 +85,33 @@ class Cita extends Model
     {
         return $this->estado === self::ESTADO_ATENDIDA;
     }
+
+    /**
+     * Indica si el paciente todavia puede cancelar o reprogramar esta cita:
+     * debe estar pendiente/confirmada y faltar 24 horas o mas.
+     */
+    public function puedeModificarse(): bool
+    {
+        if (! in_array($this->estado, [self::ESTADO_PENDIENTE, self::ESTADO_CONFIRMADA], true)) {
+            return false;
+        }
+
+        $fechaHora = \Illuminate\Support\Carbon::parse(
+            $this->fecha->format('Y-m-d') . ' ' . $this->hora
+        );
+
+        return now()->diffInHours($fechaHora, false) >= 24;
+    }
+
+    /**
+     * Mensaje explicando por que no se puede modificar, para mostrar en pantalla.
+     */
+    public function motivoNoModificable(): string
+    {
+        if (! in_array($this->estado, [self::ESTADO_PENDIENTE, self::ESTADO_CONFIRMADA], true)) {
+            return "No se puede modificar una cita en estado \"{$this->estado}\".";
+        }
+
+        return 'Ya no se puede modificar: faltan menos de 24 horas para la cita.';
+    }
 }

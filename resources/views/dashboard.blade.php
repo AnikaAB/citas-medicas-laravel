@@ -130,7 +130,7 @@
 @if($usuario->esPaciente())
     <div class="d-flex justify-content-between align-items-center mb-3">
         <h5 class="mb-0"><i class="bi bi-calendar2-week me-2"></i>Tus próximas citas</h5>
-        <a href="{{ route('mis-citas.index') }}" class="btn btn-sm btn-primary">
+        <a href="{{ route('paciente.citas.index') }}" class="btn btn-sm btn-primary">
             <i class="bi bi-calendar2-heart"></i> Gestionar mis citas
         </a>
     </div>
