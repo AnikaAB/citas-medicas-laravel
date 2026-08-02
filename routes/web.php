@@ -6,8 +6,9 @@ use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\CitaController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DoctorController;
-use App\Http\Controllers\MisCitasController;
+use App\Http\Controllers\PacienteCitaController;
 use App\Http\Controllers\PacienteController;
+use App\Http\Controllers\PerfilController;
 use App\Http\Controllers\RecepcionistaController;
 use Illuminate\Support\Facades\Route;
 
@@ -82,15 +83,20 @@ Route::middleware('auth')->group(function () {
         Route::patch('/usuarios/{usuario}/estado', [\App\Http\Controllers\UserController::class, 'alternarEstado'])->name('usuarios.alternarEstado');
     });
 
-    // Mis Citas: exclusivo para el paciente, solo sobre SUS PROPIAS citas.
-    // Puede agendar, ver su historial, cancelar y reprogramar (con 24h+
-    // de anticipacion, regla validada en el controlador y en el modelo).
+    // Autogestion del paciente: ver/agendar/cancelar SUS propias citas
+    // y editar su propio perfil. Nunca gestiona citas ni pacientes ajenos.
     Route::middleware('rol:paciente')->group(function () {
-        Route::get('/mis-citas', [MisCitasController::class, 'index'])->name('mis-citas.index');
-        Route::get('/mis-citas/agendar', [MisCitasController::class, 'create'])->name('mis-citas.create');
-        Route::post('/mis-citas/agendar', [MisCitasController::class, 'store'])->name('mis-citas.store');
-        Route::get('/mis-citas/{cita}/reprogramar', [MisCitasController::class, 'editReprogramar'])->name('mis-citas.reprogramar');
-        Route::put('/mis-citas/{cita}/reprogramar', [MisCitasController::class, 'reprogramar'])->name('mis-citas.reprogramar.update');
-        Route::patch('/mis-citas/{cita}/cancelar', [MisCitasController::class, 'cancelar'])->name('mis-citas.cancelar');
+        Route::get('/mis-citas', [PacienteCitaController::class, 'index'])->name('paciente.citas.index');
+        Route::get('/mis-citas/nueva', [PacienteCitaController::class, 'create'])->name('paciente.citas.create');
+        Route::post('/mis-citas', [PacienteCitaController::class, 'store'])->name('paciente.citas.store');
+        Route::get('/mis-citas/{cita}/reprogramar', [PacienteCitaController::class, 'editReprogramar'])->name('paciente.citas.reprogramar');
+        Route::put('/mis-citas/{cita}/reprogramar', [PacienteCitaController::class, 'reprogramar'])->name('paciente.citas.reprogramar.update');
+        Route::patch('/mis-citas/{cita}/cancelar', [PacienteCitaController::class, 'cancelar'])->name('paciente.citas.cancelar');
+        // Endpoints AJAX que alimentan los <select> dependientes del formulario de agendar.
+        Route::get('/mis-citas/doctores-por-especialidad', [PacienteCitaController::class, 'doctoresPorEspecialidad'])->name('paciente.citas.doctores');
+        Route::get('/mis-citas/horarios-disponibles', [PacienteCitaController::class, 'horariosDisponibles'])->name('paciente.citas.horarios');
+
+        Route::get('/perfil', [PerfilController::class, 'edit'])->name('perfil.edit');
+        Route::put('/perfil', [PerfilController::class, 'update'])->name('perfil.update');
     });
 });

@@ -292,8 +292,13 @@
                     @endif
                     @if(auth()->user()->rol === 'paciente')
                         <li class="nav-item">
-                            <a class="nav-link {{ request()->routeIs('mis-citas.*') ? 'active' : '' }}" href="{{ route('mis-citas.index') }}">
+                            <a class="nav-link {{ request()->routeIs('paciente.citas.*') ? 'active' : '' }}" href="{{ route('paciente.citas.index') }}">
                                 <i class="bi bi-calendar2-heart"></i>Mis citas
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link {{ request()->routeIs('perfil.*') ? 'active' : '' }}" href="{{ route('perfil.edit') }}">
+                                <i class="bi bi-person-vcard"></i>Mi perfil
                             </a>
                         </li>
                     @endif
