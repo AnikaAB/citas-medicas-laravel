@@ -1,6 +1,7 @@
 @extends('layouts.app')
 @section('titulo', 'Usuarios')
 @section('contenido')
+
 <h3><i class="bi bi-person-gear me-2"></i>Gestion de usuarios</h3>
 <p class="text-muted">Activa o desactiva el acceso al sistema. Un usuario desactivado no puede iniciar sesion, pero conserva su historial.</p>
 
@@ -43,6 +44,7 @@
                     <span class="badge-estado" style="background: rgba(52,211,153,0.15); border: 1px solid rgba(52,211,153,0.4); color: #059669;"><i class="bi bi-check-circle"></i> Activo</span>
                 @else
                     <span class="badge-estado" style="background: rgba(244,63,94,0.15); border: 1px solid rgba(244,63,94,0.4); color: #be123c;"><i class="bi bi-x-circle"></i> Inactivo</span>
+
                 @endif
             </td>
             <td class="text-end">
@@ -51,6 +53,7 @@
                         @csrf @method('PATCH')
                         @if($usuario->activo)
                             <button class="btn btn-sm btn-outline-danger" onclick="return confirm('¿Desactivar a {{ $usuario->name }}? No podra iniciar sesion.')">Desactivar</button>
+
                         @else
                             <button class="btn btn-sm btn-outline-success">Activar</button>
                         @endif
@@ -62,6 +65,7 @@
         </tr>
         @empty
         <tr><td colspan="5" class="text-center">No se encontraron usuarios.</td></tr>
+
         @endforelse
     </tbody>
 </table>

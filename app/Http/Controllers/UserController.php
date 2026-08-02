@@ -14,8 +14,10 @@ use Illuminate\Support\Facades\Auth;
  * su acceso. No permite crear usuarios sueltos ni cambiar el rol desde
  * aqui: los doctores y pacientes se siguen creando desde sus propios
  * modulos (DoctorController / PacienteController / registro publico),
- * y las recepcionistas desde su propio modulo (RecepcionistaController).
+ * y las recepcionistas desde su propio modulo (RecepcionistaController),
+ * que ya validan y crean su perfil asociado correctamente.
  */
+
 class UserController extends Controller
 {
     public function index(Request $request)
@@ -31,8 +33,7 @@ class UserController extends Controller
         if ($request->filled('buscar')) {
             $texto = $request->input('buscar');
             $query->where(function ($q) use ($texto) {
-                $q->where('name', 'like', "%{$texto}%")
-                  ->orWhere('email', 'like', "%{$texto}%");
+                $q->where('name', 'like', "%{$texto}%")->orWhere('email', 'like', "%{$texto}%");
             });
         }
 

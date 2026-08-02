@@ -27,6 +27,16 @@ class LoginController extends Controller
             ]);
         }
 
+        // Un usuario desactivado por el admin no puede iniciar sesion,
+        // aunque la contraseña sea correcta.
+        if (! Auth::user()->estaActivo()) {
+            Auth::logout();
+
+            throw ValidationException::withMessages([
+                'email' => 'Tu cuenta esta desactivada. Contacta al administrador del sistema.',
+            ]);
+        }
+
         $request->session()->regenerate();
 
         return redirect()->intended(route('dashboard'));
