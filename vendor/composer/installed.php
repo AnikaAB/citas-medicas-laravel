@@ -3,7 +3,7 @@
         'name' => 'proyecto/citas-medicas',
         'pretty_version' => 'dev-main',
         'version' => 'dev-main',
-        'reference' => 'c9122bfe951774a68dd50126aa022795a521beeb',
+        'reference' => 'a8bb7b3f39ab37925f2d9932f75273aadbb2433c',
         'type' => 'project',
         'install_path' => __DIR__ . '/../../',
         'aliases' => array(),
@@ -664,7 +664,7 @@
         'proyecto/citas-medicas' => array(
             'pretty_version' => 'dev-main',
             'version' => 'dev-main',
-            'reference' => 'c9122bfe951774a68dd50126aa022795a521beeb',
+            'reference' => 'a8bb7b3f39ab37925f2d9932f75273aadbb2433c',
             'type' => 'project',
             'install_path' => __DIR__ . '/../../',
             'aliases' => array(),

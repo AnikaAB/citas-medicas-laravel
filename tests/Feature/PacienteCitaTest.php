@@ -85,7 +85,7 @@ class PacienteCitaTest extends TestCase
         $cita = Cita::create([
             'paciente_id' => $paciente->id,
             'doctor_id' => $doctor->id,
-            'fecha' => now()->addDay()->toDateString(),
+            'fecha' => now()->addDays(2)->toDateString(),
             'hora' => '09:00:00',
             'motivo' => 'Consulta general',
             'estado' => Cita::ESTADO_PENDIENTE,
