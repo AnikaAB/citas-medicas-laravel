@@ -8,3 +8,5 @@ node_modules/.vite/
 !/storage/framework/sessions/.gitignore
 /storage/framework/views/*
 !/storage/framework/views/.gitignore
+/storage/logs/*.log
+!/storage/logs/.gitignore
